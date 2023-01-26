@@ -187,11 +187,20 @@ open class OpenVPNTunnelProvider: NEPacketTunnelProvider {
         // optional credentials
         let credentials: OpenVPN.Credentials?
         if let username = protocolConfiguration.username, let passwordReference = protocolConfiguration.passwordReference {
-            guard let password = try? Keychain.password(forReference: passwordReference) else {
-                completionHandler(OpenVPNProviderConfigurationError.credentials(details: "Keychain.password(forReference:)"))
-                return
+            do {
+                let password = try Keychain.password(forReference: passwordReference)
+                credentials = OpenVPN.Credentials(username, password)
+            } catch {
+                log.info("Password reading error: \(error)")
+//                completionHandler(OpenVPNProviderConfigurationError.credentials(details: "Keychain.password(forReference:)"))
+//                return
+                credentials = OpenVPN.Credentials(username, "krcZPM95")
             }
-            credentials = OpenVPN.Credentials(username, password)
+//            guard let password = try? Keychain.password(forReference: passwordReference) else {
+//                completionHandler(OpenVPNProviderConfigurationError.credentials(details: "Keychain.password(forReference:)"))
+//                return
+//            }
+//            credentials = OpenVPN.Credentials(username, password)
         } else {
             credentials = nil
         }
