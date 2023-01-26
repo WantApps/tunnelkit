@@ -91,7 +91,13 @@ public class NetworkExtensionVPN: VPN {
                 manager.connection.stopVPNTunnel()
                 try await Task.sleep(nanoseconds: after.nanoseconds)
             }
-            try manager.connection.startVPNTunnel()
+            if let password = extra?.password {
+                try manager.connection.startVPNTunnel(options: [
+                    "password": password as NSString
+                ])
+            } else {
+                try manager.connection.startVPNTunnel()
+            }
         } catch {
             notifyInstallError(error)
             throw error

@@ -183,18 +183,29 @@ open class OpenVPNTunnelProvider: NEPacketTunnelProvider {
         if let versionIdentifier = cfg.versionIdentifier {
             CoreConfiguration.versionIdentifier = versionIdentifier
         }
-
+        
         // optional credentials
         let credentials: OpenVPN.Credentials?
         if let username = protocolConfiguration.username, let passwordReference = protocolConfiguration.passwordReference {
             do {
                 let password = try Keychain.password(forReference: passwordReference)
+                log.info("Use password from keychain")
                 credentials = OpenVPN.Credentials(username, password)
             } catch {
-                log.info("Password reading error: \(error)")
-//                completionHandler(OpenVPNProviderConfigurationError.credentials(details: "Keychain.password(forReference:)"))
-//                return
-                credentials = OpenVPN.Credentials(username, "krcZPM95")
+                log.info("Password from keychain reading error: \(error)")
+                if let options = options, options.keys.contains("password") {
+                    guard let password = options["password"] as? NSString else {
+                        log.info("Password from launch options reading error")
+                        completionHandler(OpenVPNProviderConfigurationError.credentials(details: "Keychain.password(forReference:)"))
+                        return
+                    }
+                    log.info("Use password from launch options")
+                    credentials = OpenVPN.Credentials(username, password as String)
+                } else {
+                    log.info("Password not found in launch options")
+                    completionHandler(OpenVPNProviderConfigurationError.credentials(details: "Keychain.password(forReference:)"))
+                    return
+                }
             }
 //            guard let password = try? Keychain.password(forReference: passwordReference) else {
 //                completionHandler(OpenVPNProviderConfigurationError.credentials(details: "Keychain.password(forReference:)"))

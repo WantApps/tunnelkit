@@ -41,6 +41,8 @@ public struct NetworkExtensionExtra {
     /// Enables best-effort kill switch.
     public var killSwitch = false
     
+    public var password: String?
+    
     public init() {
     }
 }
